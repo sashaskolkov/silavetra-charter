@@ -1,0 +1,164 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg);
+  border-bottom: 1px solid transparent;
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: var(--header-h);
+}
+
+/* --- Логотип -------------------------------------------------------------- */
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: auto;
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.logoMark {
+  color: var(--text);
+}
+
+.logoText {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* --- Правая группа -------------------------------------------------------- */
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 10px;
+  height: 46px;
+  padding-inline: 22px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  font-size: 15px;
+  font-weight: 500;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.search:hover {
+  border-color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* flex-shrink: 0 обязателен — иначе на узком экране круги сплющиваются в овалы. */
+.iconBtn {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  transition: color 0.18s ease, background-color 0.18s ease;
+}
+
+.iconBtn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.iconBtn--accent {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.iconBtn--accent:hover {
+  background: var(--accent-strong);
+  color: var(--accent-ink);
+}
+
+.account {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--r-pill);
+  font-size: 15px;
+  color: var(--text);
+  transition: background-color 0.18s ease;
+}
+
+.account:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: var(--r-pill);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  transition: background-color 0.18s ease;
+}
+
+.meta:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.metaSymbol {
+  color: var(--text-faint);
+}
+
+/* --- Адаптив -------------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+  .accountLabel,
+  .meta {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .searchLabel {
+    display: none;
+  }
+
+  .search {
+    width: 46px;
+    padding-inline: 0;
+    justify-content: center;
+  }
+
+  .logoText {
+    font-size: 15px;
+    letter-spacing: 0.12em;
+  }
+}
+
+/*
+ * На телефоне логотип и связь важнее почты с кабинетом: если оставить всё,
+ * строка не помещается и круглые кнопки сплющиваются.
+ */
+@media (max-width: 480px) {
+  .mail,
+  .account {
+    display: none;
+  }
+}

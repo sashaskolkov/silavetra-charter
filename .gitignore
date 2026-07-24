@@ -7,6 +7,13 @@ node_modules/
 __pycache__/
 *.pyc
 
+# Сборка Next.js — 200 МБ, восстанавливается из исходников
+.next/
+out/
+next-env.d.ts
+.vercel/
+*.tsbuildinfo
+
 # Секреты — на всякий случай
 .env
 .env.*

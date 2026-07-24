@@ -1,0 +1,331 @@
+.page {
+  padding-block: 28px 88px;
+}
+
+/* --- Хлебные крошки ------------------------------------------------------- */
+
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+  font-size: 15px;
+  color: var(--text-faint);
+}
+
+.crumbLink {
+  color: var(--accent);
+}
+
+.crumbLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* --- Дисклеймер ----------------------------------------------------------- */
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding: 22px 26px;
+  border: 1px solid rgba(228, 245, 140, 0.35);
+  border-radius: var(--r-card);
+  background: rgba(228, 245, 140, 0.07);
+}
+
+.noticeIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--accent);
+}
+
+.noticeText {
+  max-width: 70ch;
+  font-size: clamp(16px, 1.3vw, 19px);
+  line-height: 1.45;
+}
+
+/* --- Раскладка ------------------------------------------------------------ */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  align-items: start;
+  gap: 32px;
+}
+
+/* --- Яхта ----------------------------------------------------------------- */
+
+.media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: var(--r-card);
+}
+
+.photo {
+  object-fit: cover;
+}
+
+.condition {
+  position: absolute;
+  z-index: 1;
+  top: 16px;
+  left: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  background: rgba(10, 10, 10, 0.66);
+  backdrop-filter: blur(10px);
+  font-size: 13px;
+}
+
+.head {
+  margin-top: 28px;
+}
+
+.model {
+  margin-top: 6px;
+  font-size: 17px;
+  color: var(--text-muted);
+}
+
+.place {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 16px;
+}
+
+.placeIcon {
+  color: var(--text-faint);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 15px;
+  border-radius: var(--r-pill);
+  background: rgba(228, 245, 140, 0.12);
+  font-size: 14px;
+  color: var(--accent);
+}
+
+.tag--muted {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+}
+
+/* --- Характеристики ------------------------------------------------------- */
+
+.specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px;
+  margin-top: 28px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--line);
+}
+
+.spec {
+  padding: 18px 20px;
+  background: var(--bg-raised);
+}
+
+.specLabel {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.specValue {
+  margin-top: 6px;
+  font-size: 19px;
+  font-weight: 500;
+}
+
+/* --- Боковая колонка ------------------------------------------------------ */
+
+.aside {
+  position: sticky;
+  top: calc(var(--header-h) + 16px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--bg-raised);
+}
+
+.priceBox {
+  padding: 24px 26px;
+  border-bottom: 1px solid var(--line);
+}
+
+.priceLabel {
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.price {
+  margin-top: 6px;
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+.priceTerm {
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* --- Форма ---------------------------------------------------------------- */
+
+.form {
+  display: grid;
+  gap: 16px;
+  padding: 24px 26px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.optional {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.input {
+  height: 50px;
+}
+
+.textarea {
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--text-faint);
+}
+
+.input:hover,
+.textarea:hover {
+  border-color: var(--text);
+}
+
+.input[aria-invalid="true"] {
+  border-color: #ff8b6b;
+}
+
+.error {
+  font-size: 13px;
+  color: #ff8b6b;
+}
+
+.submit {
+  height: 52px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.18s ease, opacity 0.18s ease;
+}
+
+.submit:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.consent {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-faint);
+}
+
+/* --- Успех ---------------------------------------------------------------- */
+
+.done {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 40px 26px;
+  text-align: center;
+  color: var(--accent);
+}
+
+.doneTitle {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.doneText {
+  max-width: 30ch;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+/* --- Адаптив -------------------------------------------------------------- */
+
+@media (max-width: 1000px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .aside {
+    position: static;
+  }
+}
+
+@media (max-width: 560px) {
+  .notice {
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+  }
+}

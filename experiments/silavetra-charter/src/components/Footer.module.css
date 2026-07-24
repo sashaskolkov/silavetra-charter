@@ -1,0 +1,99 @@
+.footer {
+  background: var(--bg);
+  padding-block: 72px 56px;
+  text-align: center;
+}
+
+/* --- Ссылки --------------------------------------------------------------- */
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 20px 56px;
+  margin-bottom: 44px;
+}
+
+.navLink {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  transition: color 0.18s ease;
+}
+
+.navLink:hover {
+  color: var(--accent);
+}
+
+/* --- Соцсети -------------------------------------------------------------- */
+
+.social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 52px;
+}
+
+.socialLink {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  color: var(--bg);
+  transition: transform 0.18s ease, background-color 0.18s ease;
+}
+
+.socialLink:hover {
+  background: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* --- Резидентство --------------------------------------------------------- */
+
+.residency {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  margin-bottom: 44px;
+}
+
+.residencyNote {
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+/* --- Копирайт ------------------------------------------------------------- */
+
+.legal {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  font-size: 15px;
+  color: var(--text-faint);
+}
+
+.policy {
+  color: var(--text-faint);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 0.18s ease;
+}
+
+.policy:hover {
+  color: var(--text);
+}
+
+@media (max-width: 720px) {
+  .nav {
+    gap: 16px 28px;
+  }
+
+  .navLink {
+    font-size: 15px;
+  }
+}

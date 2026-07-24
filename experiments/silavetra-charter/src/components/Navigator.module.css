@@ -1,0 +1,388 @@
+.section {
+  position: relative;
+  z-index: 20;
+  padding-block: clamp(56px, 7vw, 104px);
+  background: var(--bg);
+  text-align: center;
+}
+
+.title {
+  max-width: 900px;
+  margin-inline: auto;
+  color: var(--accent);
+}
+
+.subtitle {
+  max-width: 620px;
+  margin: 20px auto 0;
+}
+
+/* --- Строка поиска -------------------------------------------------------- */
+
+.bar {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  width: min(100%, 1080px);
+  margin: 44px auto 0;
+  padding: 8px;
+  border-radius: var(--r-pill);
+  background: var(--surface-raised);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  text-align: left;
+}
+
+.segment {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Разделители между полями. */
+.segment + .segment::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 16px;
+  bottom: 16px;
+  width: 1px;
+  background: var(--line-ink);
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 60px;
+  padding-inline: 22px;
+  border-radius: var(--r-pill);
+  color: var(--ink);
+  text-align: left;
+  transition: background-color 0.16s ease;
+}
+
+.trigger:hover {
+  background: rgba(11, 27, 43, 0.04);
+}
+
+.triggerIcon {
+  flex-shrink: 0;
+  color: var(--ink);
+}
+
+.triggerBody {
+  min-width: 0;
+}
+
+.triggerLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.triggerValue {
+  display: block;
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.triggerValue--empty {
+  color: var(--ink-muted);
+  font-weight: 400;
+}
+
+.chevron {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--ink-muted);
+  transition: transform 0.18s ease;
+}
+
+.chevron--open {
+  transform: rotate(180deg);
+}
+
+.submit {
+  flex-shrink: 0;
+  height: 60px;
+  padding-inline: 40px;
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.18s ease;
+}
+
+.submit:hover {
+  background: #262626;
+}
+
+/* --- Выпадающие панели ---------------------------------------------------- */
+
+.popover {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 280px;
+  max-width: 380px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 18px;
+  border-radius: var(--r-card);
+  background: var(--surface-raised);
+  color: var(--ink);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+/* У последних полей панель прижимается к правому краю. */
+.popover--right {
+  left: auto;
+  right: 0;
+}
+
+.popoverTitle {
+  margin-bottom: 14px;
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--line-ink);
+  border-radius: var(--r-pill);
+  font-size: 15px;
+  color: var(--ink);
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.option:hover {
+  border-color: var(--ink);
+}
+
+.option--active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+.optionNote {
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.option--active .optionNote {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* --- Счётчик гостей ------------------------------------------------------- */
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 8px;
+  border: 1px solid var(--line-ink);
+  border-radius: var(--r-pill);
+}
+
+.stepperBtn {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  transition: background-color 0.16s ease, opacity 0.16s ease;
+}
+
+.stepperBtn:hover:not(:disabled) {
+  background: #1d3348;
+}
+
+.stepperBtn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.stepperValue {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Даты */
+
+.dateGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.dateField {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.dateInput {
+  height: 44px;
+  padding-inline: 14px;
+  border: 1px solid var(--line-ink);
+  border-radius: var(--r-sm);
+  background: #fff;
+  color: var(--ink);
+  font-size: 15px;
+  color-scheme: light;
+}
+
+.dateInput:hover {
+  border-color: var(--ink);
+}
+
+.popoverNote {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-ink);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-muted);
+}
+
+/* --- Подсказка под строкой ------------------------------------------------ */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 24px;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.count {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* --- Социальное доказательство ------------------------------------------- */
+
+.proof {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 36px;
+}
+
+.proofValue {
+  font-size: clamp(30px, 3vw, 40px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.proofLabel {
+  max-width: none;
+  font-size: 15px;
+  line-height: 1.25;
+  text-align: left;
+  color: var(--text);
+}
+
+.avatars {
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+}
+
+.avatar {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--bg);
+}
+
+/* Кружки заходят друг на друга, как в оригинале. */
+.avatar + .avatar {
+  margin-left: -16px;
+}
+
+.avatarImg {
+  object-fit: cover;
+}
+
+@media (max-width: 520px) {
+  .proof {
+    gap: 14px;
+  }
+
+  .avatar {
+    width: 46px;
+    height: 46px;
+  }
+}
+
+/* --- Адаптив -------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .bar {
+    flex-direction: column;
+    gap: 4px;
+    border-radius: var(--r-card);
+  }
+
+  .segment + .segment::before {
+    left: 22px;
+    right: 22px;
+    top: 0;
+    bottom: auto;
+    width: auto;
+    height: 1px;
+  }
+
+  .trigger {
+    border-radius: var(--r-sm);
+  }
+
+  .popover {
+    position: static;
+    max-width: none;
+    box-shadow: none;
+    padding-inline: 22px;
+  }
+
+  .submit {
+    width: 100%;
+    margin-top: 4px;
+  }
+}

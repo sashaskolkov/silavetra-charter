@@ -1,0 +1,172 @@
+.section {
+  background: var(--surface);
+  color: var(--ink);
+  padding-block: var(--section-y);
+}
+
+/* --- Заголовок ------------------------------------------------------------ */
+
+.head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+  align-items: start;
+  gap: 32px;
+  margin-bottom: 48px;
+}
+
+.title {
+  color: var(--ink);
+}
+
+.intro {
+  max-width: 520px;
+  padding-top: 8px;
+  font-size: clamp(16px, 1.3vw, 19px);
+  line-height: 1.45;
+  color: var(--ink-muted);
+}
+
+/* --- Сетка ---------------------------------------------------------------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.card {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--r-card);
+  aspect-ratio: 3 / 4;
+  color: #fff;
+  isolation: isolate;
+}
+
+/* Широкие карточки открывают и закрывают композицию. */
+.card--wide {
+  grid-column: span 2;
+  aspect-ratio: 16 / 9;
+}
+
+.photo {
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.card:hover .photo {
+  transform: scale(1.04);
+}
+
+/* Затемнение, чтобы текст читался на любом кадре. */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to top,
+    rgba(6, 12, 18, 0.86) 0%,
+    rgba(6, 12, 18, 0.42) 34%,
+    rgba(6, 12, 18, 0.06) 62%
+  );
+}
+
+.body {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 24px;
+}
+
+.name {
+  font-size: clamp(26px, 2.6vw, 44px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.tagline {
+  margin-top: 10px;
+  max-width: 34ch;
+  font-size: 14px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 14px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.metaDot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* --- Подвал секции -------------------------------------------------------- */
+
+.footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line-ink);
+}
+
+.footerLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding-inline: 28px;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.18s ease;
+}
+
+.footerLink:hover {
+  background: #1d3348;
+}
+
+/* --- Адаптив -------------------------------------------------------------- */
+
+@media (max-width: 1000px) {
+  .head {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card--wide {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 620px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .card,
+  .card--wide {
+    grid-column: span 1;
+    aspect-ratio: 4 / 3;
+  }
+}
