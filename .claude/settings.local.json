@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init *)",
+      "Bash(mkdir -p experiments notes .claude)",
+      "Read(//Users/sashaskolkov/.claude/**)",
+      "Read(//Users/sashaskolkov/**)",
+      "WebFetch(domain:silavetra.com)",
+      "WebFetch(domain:searadar.com)",
+      "WebSearch",
+      "mcp__visualize__read_me"
+    ]
+  }
+}

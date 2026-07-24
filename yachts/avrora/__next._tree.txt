@@ -1,0 +1,5 @@
+:HL["/silavetra-charter/_next/static/chunks/039yxm76zyy2e.css","style"]
+:HL["/silavetra-charter/_next/static/media/16d91c780434f2ce-s.p.0shchh0jtv0ui.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/silavetra-charter/_next/static/media/8800dfc60902df36-s.p.3nasnllvo8ig4.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/silavetra-charter/_next/static/chunks/37v1u8a-nq24a.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"yachts","param":null,"prefetchHints":0,"slots":{"children":{"name":"id","param":{"type":"d","key":"avrora","siblings":null},"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}}}},"staleTime":300,"buildId":"fv2GToxSolA318dEryAba"}
