@@ -1,11 +1,29 @@
 # Выкладка на GitHub Pages
 
-Сейчас сайт выкладывается вручную: собранная статика уходит в ветку `gh-pages`,
-Pages отдаёт её из корня этой ветки.
+Сайт собирается и выкладывается автоматически при каждом пуше в `main`.
+Workflow лежит в `.github/workflows/github-pages.yml`, источником в настройках
+репозитория выбран **GitHub Actions**.
 
-## Обновить сайт
+Ничего запускать руками не нужно: `git push` — и через пару минут
+<https://sashaskolkov.github.io/silavetra-charter/> обновится.
 
-Из `experiments/silavetra-charter`:
+Пересобрать без изменений в коде можно кнопкой **Run workflow** во вкладке
+Actions — у workflow есть `workflow_dispatch`.
+
+## Что делает workflow
+
+1. Ставит зависимости через `npm ci`.
+2. Собирает статику с `NEXT_PUBLIC_BASE_PATH=/имя-репозитория` — Pages отдаёт
+   сайт из подпапки, и без базового пути отвалятся стили и картинки.
+3. Отдаёт папку `out` в Pages.
+
+Перед сборкой автоматически отрабатывает `sync-fleet`: он переносит
+`data/fleet.csv` в модуль внутри приложения. Поэтому правки базы попадают
+на сайт тем же пушем, без отдельных действий.
+
+## Выложить вручную
+
+Нужно, только если Actions недоступны. Из `experiments/silavetra-charter`:
 
 ```bash
 NEXT_PUBLIC_BASE_PATH=/silavetra-charter npm run build
@@ -15,23 +33,8 @@ npx gh-pages -d out --dotfiles
 Флаг `--dotfiles` обязателен: без него не уедет `.nojekyll`, и Pages
 выбросит папку `_next` — сайт останется без стилей и скриптов.
 
-## Включить автосборку
-
-Файл `github-pages.yml` — готовый workflow, он собирает и выкладывает сайт
-при каждом пуше в `main`. Положить его на место мешает право `workflow`,
-которого нет у текущего токена `gh`.
-
-Чтобы включить, выполните в терминале:
-
-```bash
-gh auth refresh -s workflow          # откроется браузер, подтвердите доступ
-git mv deploy/github-pages.yml .github/workflows/deploy.yml
-git commit -m "CI: автосборка GitHub Pages"
-git push
-```
-
-После этого в настройках репозитория (Settings → Pages) источником нужно
-выбрать **GitHub Actions** вместо ветки `gh-pages`.
+Учтите, что источник переключён на Actions, поэтому ручная выкладка в ветку
+`gh-pages` сайт больше не обновит, пока источник не вернуть обратно.
 
 ## Почему статика
 
