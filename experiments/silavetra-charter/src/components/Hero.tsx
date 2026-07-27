@@ -1,13 +1,22 @@
 import Image from "next/image";
+import { ChatTrigger } from "./ChatContext";
 import { asset } from "@/lib/asset";
 import styles from "./Hero.module.css";
 
+/* Переносы расставлены вручную: строки должны ломаться по смыслу,
+   а не по ширине колонки. */
 const STATS = [
-  { value: "674", label: "парусных яхты\nпо всей России" },
-  { value: "45", label: "направлений\nот Балтики до Сахалина" },
+  {
+    value: "675",
+    label: "парусных яхт\nи моторных лодок\nпо всей России",
+  },
+  {
+    value: "45",
+    label: "водных регионов\nнашей страны:\nот Балтики до Сахалина",
+  },
   {
     value: "20",
-    label: "городов России\nсо спортивным флотом и 8 баз «Силы ветра»",
+    label: "городов России\nсо спортивным флотом\nи 8 баз «Силы ветра»",
   },
 ];
 
@@ -43,11 +52,9 @@ export function Hero() {
 
           <div className={styles.actions}>
             <a href="#navigator" className="btn btn--accent">
-              Подобрать яхту
+              Выбрать яхту
             </a>
-            <a href="#destinations" className="btn btn--ghost">
-              Смотреть направления
-            </a>
+            <ChatTrigger className="btn btn--ghost">Связаться с нами</ChatTrigger>
           </div>
 
         </div>

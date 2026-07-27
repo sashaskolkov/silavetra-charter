@@ -37,7 +37,16 @@
 .sidebar {
   position: sticky;
   top: calc(var(--header-h) + 16px);
-  overflow: hidden;
+  /*
+   * Календарь сделал сайдбар выше экрана, а прилипший блок не растёт
+   * вместе со страницей: кнопка «Показать» уезжала за нижнюю кромку,
+   * и достать её было нечем. Поэтому у сайдбара своя прокрутка.
+   *
+   * overflow-x остаётся hidden — им скругление обрезает шапку.
+   */
+  max-height: calc(100vh - var(--header-h) - 32px);
+  overflow-x: hidden;
+  overflow-y: auto;
   border: 1px solid var(--line);
   border-radius: var(--r-card);
   background: var(--bg-raised);
@@ -137,23 +146,12 @@
   color: var(--text-faint);
 }
 
-.date {
-  width: 100%;
-  height: 46px;
-  padding-inline: 14px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-sm);
-  background: var(--bg);
-  color: var(--text);
-  font-size: 15px;
-  color-scheme: dark;
-}
-
-.date:hover {
-  border-color: var(--text);
-}
-
 .submit {
+  /* Сайдбар со своей прокруткой — главное действие не должно
+     уезжать под кромку вместе с фильтрами. */
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
   width: 100%;
   height: 50px;
   border-radius: var(--r-pill);
@@ -161,6 +159,7 @@
   color: var(--accent-ink);
   font-size: 16px;
   font-weight: 500;
+  box-shadow: 0 0 0 8px var(--bg-raised);
   transition: background-color 0.18s ease;
 }
 
@@ -185,6 +184,13 @@
   justify-content: space-between;
   gap: 12px 24px;
   margin-bottom: 20px;
+}
+
+/* Уточнение под заголовком: регион выбран, показываем одну его акваторию. */
+.areaNote {
+  margin-top: 6px;
+  font-size: 16px;
+  color: var(--text-muted);
 }
 
 .count {
@@ -416,8 +422,12 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /* В одну колонку сайдбар едет вместе со страницей — своя прокрутка
+     и потолок высоты здесь только мешали бы. */
   .sidebar {
     position: static;
+    max-height: none;
+    overflow: hidden;
   }
 
   .sidebarBody {

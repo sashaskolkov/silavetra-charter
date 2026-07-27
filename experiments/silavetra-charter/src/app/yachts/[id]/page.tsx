@@ -8,6 +8,7 @@ import { getYacht, loadFleet } from "@/data/fleet";
 import {
   crewLabel,
   getBoatType,
+  hullLabel,
   pluralCabins,
 } from "@/data/catalog";
 import { PriceWithCook } from "@/components/PriceWithCook";
@@ -32,8 +33,8 @@ export async function generateMetadata({
   const yacht = getYacht(id);
   if (!yacht) return { title: "Яхта не найдена · Сила ветра" };
   return {
-    title: `${yacht.name} · ${yacht.regionName} · Сила ветра`,
-    description: `${yacht.model}, ${yacht.lengthM} м, до ${yacht.guests} гостей. ${yacht.regionName}, ${yacht.port}.`,
+    title: `${yacht.name} · ${yacht.areaName} · Сила ветра`,
+    description: `${yacht.model}, ${yacht.lengthM} м, до ${yacht.guests} гостей. ${yacht.areaName}, ${yacht.port} — ${yacht.regionName}.`,
   };
 }
 
@@ -44,6 +45,7 @@ export default async function YachtPage({ params }: PageProps) {
 
   const boatType = getBoatType(yacht.type);
   const minDays = boatType?.minDays ?? 4;
+  const hull = hullLabel(yacht.hull);
 
   return (
     <>
@@ -62,12 +64,32 @@ export default async function YachtPage({ params }: PageProps) {
             {boatType?.name}
           </Link>
           <span>—</span>
-          <Link
-            href={`/search?type=${yacht.type}&region=${yacht.region}`}
-            className={styles.crumbLink}
-          >
-            {yacht.regionName}
-          </Link>
+          {/* Спортивную лодку ищут по базе, остальные — по региону:
+              крошка должна вести туда же, откуда человек пришёл. */}
+          {yacht.type === "sport" ? (
+            <Link
+              href={`/search?type=${yacht.type}&city=${yacht.city}`}
+              className={styles.crumbLink}
+            >
+              {yacht.port}
+            </Link>
+          ) : (
+            <>
+              <Link
+                href={`/search?type=${yacht.type}&region=${yacht.region}`}
+                className={styles.crumbLink}
+              >
+                {yacht.regionName}
+              </Link>
+              <span>—</span>
+              <Link
+                href={`/search?type=${yacht.type}&region=${yacht.region}&area=${yacht.area}`}
+                className={styles.crumbLink}
+              >
+                {yacht.areaName}
+              </Link>
+            </>
+          )}
           <span>—</span>
           <span>{yacht.name}</span>
         </nav>
@@ -103,13 +125,14 @@ export default async function YachtPage({ params }: PageProps) {
 
               <p className={styles.place}>
                 <PinIcon />
-                {yacht.regionName}, {yacht.port}
+                {yacht.areaName}, {yacht.port}
+                <span className={styles.placeRegion}>{yacht.regionName}</span>
               </p>
 
               <div className={styles.tags}>
                 <span className={styles.tag}>
                   <AnchorIcon />
-                  {crewLabel(yacht.crew)}
+                  {crewLabel(yacht.crew, yacht.type)}
                 </span>
                 <span className={`${styles.tag} ${styles["tag--muted"]}`}>
                   Аренда {boatType?.term}
@@ -124,10 +147,16 @@ export default async function YachtPage({ params }: PageProps) {
                 label="Каюты"
                 value={yacht.cabins > 0 ? pluralCabins(yacht.cabins) : "нет"}
               />
-              <Spec
-                label="Санузлы"
-                value={yacht.heads > 0 ? String(yacht.heads) : "нет"}
-              />
+              {/* Корпус есть только у спортивных, санузел — только там,
+                  где он вообще предусмотрен. Проверяем сами значения,
+                  а не тип лодки: так строка не соврёт ни при каких данных. */}
+              {hull ? (
+                <Spec label="Корпус" value={hull} />
+              ) : (
+                yacht.heads > 0 && (
+                  <Spec label="Санузлы" value={String(yacht.heads)} />
+                )
+              )}
             </div>
           </div>
 

@@ -194,8 +194,15 @@ def pick_model(rng):
     return rng.choice(LARGE)
 
 
-def build_row(rng, name, region, port, coeff, photo):
-    model, length = pick_model(rng)
+def build_row(rng, name, region, port, coeff, photo, models=None):
+    """
+    Одна строка таблицы по формулам, откалиброванным на эталонных лодках.
+
+    `models` задаёт пул, из которого берётся корпус, — им пользуется
+    expansion.py, чтобы выбрать моторную лодку. Без него пул выбирается
+    как раньше, и поведение генератора не меняется.
+    """
+    model, length = rng.choice(models) if models else pick_model(rng)
 
     # Гостей — примерно 0.62 на метр длины. Коэффициент снят с эталонных
     # строк: 9 м / 6 гостей, 15 м / 10, 28 м / 16.
@@ -275,7 +282,8 @@ def main():
 
     write_csv(rows)
     write_xlsx(rows)
-    write_credits()
+    # PHOTO-CREDITS.md пишет find-photos.py: он владеет фотопулом,
+    # и форма photos.source.json теперь его.
 
     print("Регионов: %d" % len(REGIONS))
     print("Лодок: %d" % len(rows))
@@ -327,41 +335,6 @@ def write_xlsx(rows):
     ws.freeze_panes = "A2"
     ws.auto_filter.ref = "A1:M%d" % (len(rows) + 1)
     wb.save(os.path.join(HERE, "yachts.xlsx"))
-
-
-def write_credits():
-    data = json.load(open(os.path.join(HERE, "photos.source.json")))
-    lines = [
-        "# Источники фотографий",
-        "",
-        "Учебный проект. Фотографии подобраны как заглушки — **соответствия",
-        "конкретной лодке нет**, кадры раздавались по кругу.",
-        "",
-        "## silavetra.com",
-        "",
-        "Три кадра из исходной таблицы. Права у «Силы ветра»,",
-        "для публикации нужно разрешение правообладателя.",
-        "",
-    ]
-    for url in TILDA_PHOTOS:
-        lines.append("- <%s>" % url)
-    lines += [
-        "",
-        "## Викисклад (Wikimedia Commons)",
-        "",
-        "Лицензии CC BY и CC BY-SA требуют видимого указания автора",
-        "и лицензии при публикации. Проверено: все ссылки отдают 200.",
-        "",
-        "| Файл | Автор | Лицензия |",
-        "| --- | --- | --- |",
-    ]
-    for item in data:
-        title = item["title"].replace("File:", "").replace("|", "/")
-        lines.append("| %s | %s | %s |" % (title, item["author"], item["lic"]))
-    lines.append("")
-
-    with open(os.path.join(HERE, "PHOTO-CREDITS.md"), "w", encoding="utf-8") as fh:
-        fh.write("\n".join(lines))
 
 
 if __name__ == "__main__":

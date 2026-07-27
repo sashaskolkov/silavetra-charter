@@ -1,0 +1,250 @@
+/* Виджет связи с оператором — правый нижний угол на всех страницах. */
+
+.root {
+  position: fixed;
+  right: var(--gutter);
+  bottom: var(--gutter);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+/* --- Кнопка вызова -------------------------------------------------------- */
+
+.launcher {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--accent-ink);
+  cursor: pointer;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  transition: transform 0.16s ease, background-color 0.16s ease;
+}
+
+.launcher:hover {
+  background: var(--accent-strong);
+  transform: translateY(-2px);
+}
+
+.launcher:active {
+  transform: translateY(0);
+}
+
+/* --- Панель --------------------------------------------------------------- */
+
+.panel {
+  width: min(360px, calc(100vw - var(--gutter) * 2));
+  max-height: min(560px, calc(100vh - var(--gutter) * 2 - 74px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--r-card);
+  background: var(--surface-raised);
+  color: var(--ink);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  animation: rise 0.18s ease-out;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
+
+  .launcher {
+    transition: none;
+  }
+}
+
+/* --- Шапка панели --------------------------------------------------------- */
+
+.head {
+  position: relative;
+  padding: 20px 20px 22px;
+  text-align: center;
+  background: var(--bg-raised);
+  color: var(--text);
+}
+
+.avatars {
+  display: flex;
+  justify-content: center;
+  /* Кружки заходят друг на друга — как аватарки операторов в оригинале. */
+  margin-bottom: 12px;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 2px solid var(--bg-raised);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.avatar + .avatar {
+  margin-left: -14px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.collapse {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.collapse:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* --- Тело ----------------------------------------------------------------- */
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px 20px;
+}
+
+.channels {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+}
+
+.channel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.channelIcon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--r-pill);
+  background: #eceef2;
+  color: var(--ink);
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+/* «Написать» — основной канал, поэтому кружок тёмный. */
+.channelIcon--ink {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.channelIcon--active {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.channel:hover .channelIcon {
+  background: #dfe3e9;
+}
+
+.channel:hover .channelIcon--ink {
+  background: #262626;
+}
+
+.channel:hover .channelIcon--active {
+  background: var(--accent-strong);
+}
+
+.channelLabel {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* --- История и заглушка --------------------------------------------------- */
+
+.history,
+.notice {
+  margin-top: 20px;
+  padding: 32px 20px;
+  border-radius: var(--r-sm);
+  background: #f1f2f5;
+  text-align: center;
+}
+
+.historyIcon {
+  color: #b6bcc6;
+}
+
+.historyTitle {
+  margin-top: 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.historyText,
+.noticeText {
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.notice {
+  padding: 24px 20px;
+}
+
+.noticeTitle {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .channels {
+    gap: 20px;
+  }
+}

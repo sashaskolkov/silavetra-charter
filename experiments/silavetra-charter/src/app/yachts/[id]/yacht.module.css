@@ -107,6 +107,14 @@
   color: var(--text-faint);
 }
 
+/* Регион отделён от «акватории, порта» — это подпись, а не часть адреса. */
+.placeRegion {
+  padding-left: 10px;
+  border-left: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
 .tags {
   display: flex;
   flex-wrap: wrap;

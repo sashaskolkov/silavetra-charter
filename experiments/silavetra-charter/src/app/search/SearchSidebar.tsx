@@ -4,26 +4,37 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   BOAT_TYPES,
+  areasForRegion,
   filterYachts,
   getBoatType,
   maxGuestsForType,
-  pluralYachts,
-  regionsForBoatType,
+  seatsForType,
+  capacityRule,
+  placesForBoatType,
+  pluralAreas,
+  pluralPlaces,
+  pluralYachtsAccusative,
   type BoatTypeId,
+  type FleetSlice,
   type SortId,
 } from "@/data/catalog";
-import type { Region, Yacht } from "@/data/fleet";
+import type { Area, City, Region } from "@/data/fleet";
+import { DateRangePicker } from "@/components/DateRangePicker";
 import styles from "./search.module.css";
 
 /** Клиенту нужен не весь каталог, а срез для подсчёта совпадений. */
-export type SidebarFleet = Pick<Yacht, "type" | "region" | "guests">;
+export type SidebarFleet = FleetSlice;
 
 type Props = {
   regions: Region[];
+  areas: Area[];
+  cities: City[];
   fleet: SidebarFleet[];
   initial: {
     type: BoatTypeId;
     region: string | null;
+    city: string | null;
+    area: string | null;
     guests: number | null;
     from: string | null;
     to: string | null;
@@ -34,50 +45,92 @@ type Props = {
 /**
  * Сайдбар подбора.
  *
- * Раньше это была серверная форма, и список направлений обновлялся только
- * после отправки: сменил тип на круизную — а акватории остались спортивные.
+ * Раньше это была серверная форма, и список мест обновлялся только после
+ * отправки: сменил тип на круизную — а в списке остались спортивные базы.
  * Теперь состояние живёт на клиенте, и всё пересчитывается сразу.
+ *
+ * Поле «куда» одно на все типы лодок, но означает разное: у круизной
+ * и моторной это регион, у спортивной — база. Что именно, решает
+ * placesForBoatType, а не компонент.
  */
-export function SearchSidebar({ regions, fleet, initial }: Props) {
+export function SearchSidebar({ regions, areas, cities, fleet, initial }: Props) {
   const router = useRouter();
 
   const [type, setType] = useState<BoatTypeId>(initial.type);
-  const [region, setRegion] = useState<string | null>(initial.region);
+  const [place, setPlace] = useState<string | null>(
+    initial.region ?? initial.city,
+  );
+  const [area, setArea] = useState<string | null>(initial.area);
   const [guests, setGuests] = useState<number | null>(initial.guests);
   const [from, setFrom] = useState(initial.from ?? "");
   const [to, setTo] = useState(initial.to ?? "");
 
   const boatType = getBoatType(type);
-  const isDaily = boatType?.minDays === 1;
 
-  const availableRegions = useMemo(
-    () => regionsForBoatType(regions, fleet, type),
-    [regions, fleet, type],
+  const places = useMemo(
+    () => placesForBoatType(type, fleet, { regions, cities }),
+    [type, fleet, regions, cities],
+  );
+
+  /* Акватория уточняет регион, поэтому появляется только вместе с ним. */
+  const availableAreas = useMemo(
+    () =>
+      places.kind === "region" && place
+        ? areasForRegion(areas, fleet, type, place)
+        : [],
+    [places.kind, place, areas, fleet, type],
   );
 
   const maxGuests = useMemo(() => maxGuestsForType(fleet, type), [fleet, type]);
 
+  /**
+   * Подсказка под счётчиком гостей.
+   *
+   * У спортивной это правило класса и ничего больше: сколько лодок
+   * выйдет на компанию, пишет карточка рядом с ценой — там это объясняет
+   * сумму, а здесь было бы повтором.
+   */
+  const guestsNote = (() => {
+    if (boatType?.multiBoat) {
+      return capacityRule(seatsForType(fleet, type));
+    }
+    return guests !== null && guests >= maxGuests
+      ? `Больше ${maxGuests} не берёт ни одна ${boatType?.name.toLowerCase()}`
+      : null;
+  })();
+
   const matches = useMemo(
-    () => filterYachts(fleet, { type, region, guests }),
-    [fleet, type, region, guests],
+    () =>
+      filterYachts(fleet, {
+        type,
+        region: places.kind === "region" ? place : null,
+        city: places.kind === "city" ? place : null,
+        area,
+        guests,
+      }),
+    [fleet, type, places.kind, place, area, guests],
   );
 
   /** Смена типа переписывает всё, что от него зависит. */
   function handleTypeChange(next: BoatTypeId) {
     setType(next);
 
-    if (
-      region &&
-      !regionsForBoatType(regions, fleet, next).some((r) => r.slug === region)
-    ) {
-      setRegion(null);
+    const nextPlaces = placesForBoatType(next, fleet, { regions, cities });
+    if (place && !nextPlaces.options.some((item) => item.slug === place)) {
+      setPlace(null);
     }
+    // Акватория привязана к региону и к типу лодки — при смене типа сбрасываем.
+    setArea(null);
 
     const limit = maxGuestsForType(fleet, next);
     setGuests((current) => (current && current > limit ? limit : current));
 
-    // Спортивную берут ровно на день — дата выезда теряет смысл.
-    if (next === "sport") setTo("");
+  }
+
+  /** Смена региона обнуляет акваторию: она принадлежит прежнему. */
+  function handlePlaceChange(next: string | null) {
+    setPlace(next);
+    setArea(null);
   }
 
   function changeGuests(delta: number) {
@@ -91,10 +144,11 @@ export function SearchSidebar({ regions, fleet, initial }: Props) {
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const params = new URLSearchParams({ type, sort: initial.sort });
-    if (region) params.set("region", region);
+    if (place) params.set(places.kind, place);
+    if (area) params.set("area", area);
     if (guests) params.set("guests", String(guests));
     if (from) params.set("from", from);
-    if (to && !isDaily) params.set("to", to);
+    if (to) params.set("to", to);
     router.push(`/search?${params.toString()}`);
   }
 
@@ -114,29 +168,53 @@ export function SearchSidebar({ regions, fleet, initial }: Props) {
           >
             {BOAT_TYPES.map((option) => (
               <option key={option.id} value={option.id}>
-                {option.minDays > 1
-                  ? `${option.name} — ${option.term}`
-                  : option.name}
+                {option.name} — {option.term}
               </option>
             ))}
           </select>
         </label>
 
         <label className={styles.field}>
-          <span className={styles.fieldLabel}>Направление</span>
+          <span className={styles.fieldLabel}>
+            {places.kind === "city" ? "База" : "Направление"}
+          </span>
           <select
-            value={region ?? ""}
-            onChange={(event) => setRegion(event.target.value || null)}
+            value={place ?? ""}
+            onChange={(event) => handlePlaceChange(event.target.value || null)}
             className={styles.select}
           >
-            <option value="">Любое — {availableRegions.length} акваторий</option>
-            {availableRegions.map((item) => (
+            <option value="">
+              {places.kind === "city" ? "Любая" : "Любое"} —{" "}
+              {pluralPlaces(places.options.length, places.kind)}
+            </option>
+            {places.options.map((item) => (
               <option key={item.slug} value={item.slug}>
-                {item.name} · {item.port}
+                {item.name}
               </option>
             ))}
           </select>
         </label>
+
+        {/* Акватория сужает выбранный регион; без региона выбирать не из чего. */}
+        {availableAreas.length > 1 && (
+          <label className={styles.field}>
+            <span className={styles.fieldLabel}>Акватория</span>
+            <select
+              value={area ?? ""}
+              onChange={(event) => setArea(event.target.value || null)}
+              className={styles.select}
+            >
+              {/* Без согласования с названием региона: род у них разный,
+                  и «вся Байкал» с «весь Карелия» тут неизбежны. */}
+              <option value="">Любая — {pluralAreas(availableAreas.length)}</option>
+              {availableAreas.map((item) => (
+                <option key={item.slug} value={item.slug}>
+                  {item.name} · {item.ports.join(", ")}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <div className={styles.field}>
           <span className={styles.fieldLabel}>Гости</span>
@@ -165,57 +243,34 @@ export function SearchSidebar({ regions, fleet, initial }: Props) {
               <PlusIcon />
             </button>
           </div>
-          {guests !== null && guests >= maxGuests && (
-            <span className={styles.hint}>
-              Больше {maxGuests} не берёт ни одна {boatType?.name.toLowerCase()}
-            </span>
-          )}
+          {guestsNote && <span className={styles.hint}>{guestsNote}</span>}
         </div>
 
-        <label className={styles.field}>
-          <span className={styles.fieldLabel}>
-            {isDaily ? "Дата выхода" : "Заезд"}
-          </span>
-          <input
-            type="date"
-            value={from}
-            onChange={(event) => setFrom(event.target.value)}
-            className={styles.date}
+        <div className={styles.field}>
+          <span className={styles.fieldLabel}>Даты</span>
+          <DateRangePicker
+            tone="dark"
+            from={from}
+            to={to}
+            minDays={boatType?.minDays ?? 4}
+            onChange={(next) => {
+              setFrom(next.from);
+              setTo(next.to);
+            }}
           />
-        </label>
-
-        {!isDaily && (
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>Выезд</span>
-            <input
-              type="date"
-              value={to}
-              min={minReturn(from, boatType?.minDays ?? 4)}
-              onChange={(event) => setTo(event.target.value)}
-              className={styles.date}
-            />
-          </label>
-        )}
+        </div>
 
         <button type="submit" className={styles.submit}>
-          Показать {pluralYachts(matches.length)}
+          Показать {pluralYachtsAccusative(matches.length)}
         </button>
 
         <p className={styles.rule}>
-          {boatType?.description} Капитан и команда входят в стоимость.
+          {boatType?.description} {boatType?.crewNoun} и команда входят
+          в стоимость.
         </p>
       </form>
     </aside>
   );
-}
-
-/** Самая ранняя дата выезда с учётом минимального срока аренды. */
-function minReturn(from: string, minDays: number): string | undefined {
-  if (!from) return undefined;
-  const date = new Date(from);
-  if (Number.isNaN(date.getTime())) return undefined;
-  date.setDate(date.getDate() + minDays);
-  return date.toISOString().slice(0, 10);
 }
 
 function MinusIcon() {

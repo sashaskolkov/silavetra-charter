@@ -4,15 +4,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PriceWithCook } from "@/components/PriceWithCook";
-import type { Region, Yacht } from "@/data/fleet";
+import type { Area, City, Region, Yacht } from "@/data/fleet";
 import {
   SORT_OPTIONS,
+  boatsNeeded,
+  companyLimit,
   crewLabel,
+  hullLabel,
   filterYachts,
+  fitVerb,
   getBoatType,
   isBoatTypeId,
   isSortId,
+  placesForBoatType,
   pluralCabins,
+  pluralPeople,
   pluralYachts,
   resolveDays,
   sortYachts,
@@ -32,26 +38,77 @@ import styles from "./search.module.css";
 export function SearchResults({
   yachts,
   regions,
+  areas,
+  cities,
 }: {
   yachts: Yacht[];
   regions: Region[];
+  areas: Area[];
+  cities: City[];
 }) {
   const params = useSearchParams();
 
   const type = readType(params.get("type"));
-  const region = readRegion(params.get("region"), regions);
   const guests = readGuests(params.get("guests"));
   const sort = readSort(params.get("sort"));
   const from = readDate(params.get("from"));
   const to = readDate(params.get("to"));
 
   const boatType = getBoatType(type);
+  const slice = yachts.map(
+    ({ type, region, area, city, guests, fleetSize }) => ({
+      type,
+      region,
+      area,
+      city,
+      guests,
+      fleetSize,
+    }),
+  );
+  const places = placesForBoatType(type, slice, { regions, cities });
+
+  /* Что в адресе значит «куда», решает тип лодки: у спортивной это
+     город базы, у остальных — регион. Чужой параметр молча игнорируем. */
+  const place = readSlug(params.get(places.kind), places.options);
+  const region = places.kind === "region" ? place : null;
+  const city = places.kind === "city" ? place : null;
+  const area = readSlug(params.get("area"), areas);
+
   const { days, assumed } = resolveDays(from, to, boatType?.minDays ?? 4);
-  const found = sortYachts(filterYachts(yachts, { type, region, guests }), sort);
-  const regionName = region
-    ? regions.find((item) => item.slug === region)?.name
+  const found = sortYachts(
+    filterYachts(yachts, { type, region, city, area, guests }),
+    sort,
+  );
+  const placeName = place
+    ? (places.options.find((item) => item.slug === place)?.name ?? null)
+    : null;
+  const areaName = area
+    ? (areas.find((item) => item.slug === area)?.name ?? null)
     : null;
   const totalOfType = yachts.filter((yacht) => yacht.type === type).length;
+
+  /*
+   * Сколько человек примет самая вместительная позиция в этом месте.
+   * Считаем только когда выдача пуста из-за компании: это отличает
+   * «флота не хватает» от «здесь вообще нет таких лодок».
+   */
+  const overflow = (() => {
+    if (found.length > 0 || !guests) return 0;
+    const here = filterYachts(yachts, {
+      type,
+      region,
+      city,
+      area,
+      guests: null,
+    });
+    if (here.length === 0) return 0;
+    const best = Math.max(
+      ...here.map((yacht) =>
+        boatType?.multiBoat ? companyLimit(yacht) : yacht.guests,
+      ),
+    );
+    return best < guests ? best : 0;
+  })();
 
   return (
     <>
@@ -63,10 +120,25 @@ export function SearchResults({
         <Link href={`/search?type=${type}`} className={styles.crumbLink}>
           {boatType?.name}
         </Link>
-        {regionName && (
+        {placeName && (
           <>
             <span>—</span>
-            <span>{regionName}</span>
+            {areaName ? (
+              <Link
+                href={`/search?type=${type}&${places.kind}=${place}`}
+                className={styles.crumbLink}
+              >
+                {placeName}
+              </Link>
+            ) : (
+              <span>{placeName}</span>
+            )}
+          </>
+        )}
+        {areaName && (
+          <>
+            <span>—</span>
+            <span>{areaName}</span>
           </>
         )}
       </nav>
@@ -74,24 +146,25 @@ export function SearchResults({
       <div className={styles.layout}>
         <SearchSidebar
           regions={regions}
-          fleet={yachts.map(({ type, region, guests }) => ({
-            type,
-            region,
-            guests,
-          }))}
-          initial={{ type, region, guests, from, to, sort }}
+          areas={areas}
+          cities={cities}
+          fleet={slice}
+          initial={{ type, region, city, area, guests, from, to, sort }}
         />
 
         <div>
           <div className={styles.head}>
-            <h1 className="headline">
-              {regionName ? `${boatType?.name}: ${regionName}` : boatType?.name}
-            </h1>
+            <div>
+              <h1 className="headline">
+                {placeName ? `${boatType?.name}: ${placeName}` : boatType?.name}
+              </h1>
+              {areaName && <p className={styles.areaNote}>{areaName}</p>}
+            </div>
             <p className={styles.count}>
               <span className={styles.countValue}>
                 {pluralYachts(found.length)}
               </span>{" "}
-              из {totalOfType} подходят под запрос
+              из {totalOfType} {fitVerb(found.length)} под запрос
             </p>
           </div>
 
@@ -101,7 +174,9 @@ export function SearchResults({
                 key={option.id}
                 href={buildHref({
                   type,
-                  region,
+                  placeKind: places.kind,
+                  place,
+                  area,
                   guests,
                   from,
                   to,
@@ -124,6 +199,7 @@ export function SearchResults({
                   yacht={yacht}
                   days={days}
                   assumed={assumed}
+                  guests={guests}
                 />
               ))}
             </div>
@@ -131,11 +207,22 @@ export function SearchResults({
             <div className={styles.empty}>
               <p className={styles.emptyTitle}>Под эти параметры лодок нет</p>
               <p className={styles.emptyText}>
-                {regionName
-                  ? `На направлении «${regionName}» нет лодок типа «${boatType?.name.toLowerCase()}»${
-                      guests ? ` на ${guests} и больше гостей` : ""
-                    }.`
-                  : `Ни одна ${boatType?.name.toLowerCase()} не берёт ${guests} и больше гостей.`}{" "}
+                {overflow
+                  ? /* Флот кончился, а не «ничего не нашлось»: у спортивных
+                       это самая частая причина пустой выдачи, и человек
+                       должен видеть предел, а не гадать. */
+                    `${placeName ? `На базе «${placeName}»` : "На базах"} лодок хватает на ${pluralPeople(
+                      overflow,
+                    )} — вас ${guests}. Уменьшите компанию или выберите базу побольше.`
+                  : areaName
+                    ? `В акватории «${areaName}» нет лодок типа «${boatType?.name.toLowerCase()}»${
+                        guests ? ` на ${guests} и больше гостей` : ""
+                      }.`
+                    : placeName
+                      ? `${places.kind === "city" ? "На базе" : "В регионе"} «${placeName}» нет лодок типа «${boatType?.name.toLowerCase()}»${
+                          guests ? ` на ${guests} и больше гостей` : ""
+                        }.`
+                      : `Ни одна ${boatType?.name.toLowerCase()} не берёт ${guests} и больше гостей.`}{" "}
                 Попробуйте изменить параметры слева.
               </p>
               <Link href={`/search?type=${type}`} className={styles.cta}>
@@ -155,12 +242,21 @@ function YachtCard({
   yacht,
   days,
   assumed,
+  guests,
 }: {
   yacht: Yacht;
   days: number;
   /** Срок не выбран пользователем, а взят как минимальный для типа. */
   assumed: boolean;
+  /** Размер компании: у спортивных от него зависит число лодок. */
+  guests: number | null;
 }) {
+  const boats = getBoatType(yacht.type)?.multiBoat
+    ? boatsNeeded(yacht.guests, guests)
+    : 1;
+  // Корпус есть только у спортивных — у остальных на его месте санузел.
+  const hull = hullLabel(yacht.hull);
+
   return (
     <article className={styles.card}>
       <div className={styles.media}>
@@ -183,15 +279,17 @@ function YachtCard({
           <p className={styles.model}>{yacht.model}</p>
         </div>
 
+        {/* Акватория и порт: «Ладожское озеро, Сортавала». Регион здесь
+            не нужен — он стоит в заголовке выдачи. */}
         <p className={styles.place}>
           <PinIcon />
-          {yacht.regionName}, {yacht.port}
+          {yacht.areaName}, {yacht.port}
         </p>
 
         <div className={styles.tags}>
           <span className={styles.tag}>
             <AnchorIcon />
-            {crewLabel(yacht.crew)}
+            {crewLabel(yacht.crew, yacht.type)}
           </span>
         </div>
 
@@ -205,10 +303,21 @@ function YachtCard({
               <span>{pluralCabins(yacht.cabins)}</span>
             </>
           )}
-          <span className={styles.specDot} />
-          <span>
-            {yacht.heads > 0 ? `санузлов: ${yacht.heads}` : "без гальюна"}
-          </span>
+          {/* У спортивной на месте гальюна стоит корпус: гальюна там
+              не бывает по устройству, а киль или шверт — важное отличие. */}
+          {hull ? (
+            <>
+              <span className={styles.specDot} />
+              <span>{hull}</span>
+            </>
+          ) : (
+            yacht.heads > 0 && (
+              <>
+                <span className={styles.specDot} />
+                <span>санузлов: {yacht.heads}</span>
+              </>
+            )
+          )}
         </p>
       </div>
 
@@ -218,6 +327,8 @@ function YachtCard({
           days={days}
           assumed={assumed}
           cookAvailable={yacht.cookAvailable}
+          boats={boats}
+          capacity={yacht.guests}
         />
         <Link href={`/yachts/${yacht.id}`} className={styles.cta}>
           Подробнее
@@ -233,8 +344,12 @@ function readType(value: string | null): BoatTypeId {
   return isBoatTypeId(value) ? value : "cruise";
 }
 
-function readRegion(value: string | null, regions: Region[]): string | null {
-  return value && regions.some((region) => region.slug === value) ? value : null;
+/** Принимаем slug, только если он есть в справочнике: чужой — как будто не задан. */
+function readSlug(
+  value: string | null,
+  known: { slug: string }[],
+): string | null {
+  return value && known.some((item) => item.slug === value) ? value : null;
 }
 
 function readGuests(value: string | null): number | null {
@@ -254,14 +369,17 @@ function readDate(value: string | null): string | null {
 
 function buildHref(state: {
   type: BoatTypeId;
-  region: string | null;
+  placeKind: "region" | "city";
+  place: string | null;
+  area: string | null;
   guests: number | null;
   from: string | null;
   to: string | null;
   sort: SortId;
 }): string {
   const params = new URLSearchParams({ type: state.type, sort: state.sort });
-  if (state.region) params.set("region", state.region);
+  if (state.place) params.set(state.placeKind, state.place);
+  if (state.area) params.set("area", state.area);
   if (state.guests) params.set("guests", String(state.guests));
   if (state.from) params.set("from", state.from);
   if (state.to) params.set("to", state.to);

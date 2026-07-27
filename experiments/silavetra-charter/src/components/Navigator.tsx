@@ -7,24 +7,32 @@ import {
   BOAT_TYPES,
   filterYachts,
   getBoatType,
+  seatsForType,
+  capacityRule,
   maxGuestsForType,
-  regionsForBoatType,
+  placesForBoatType,
+  pluralDays,
+  pluralPlaces,
+  pluralYachtsAccusative,
   type BoatTypeId,
+  type FleetSlice,
 } from "@/data/catalog";
-import type { Region, Yacht } from "@/data/fleet";
+import type { City, Region } from "@/data/fleet";
 import { asset } from "@/lib/asset";
+import { DateRangePicker } from "@/components/DateRangePicker";
 import styles from "./Navigator.module.css";
 
-type PopoverId = "type" | "region" | "dates" | "guests" | null;
+type PopoverId = "type" | "place" | "dates" | "guests" | null;
 
 /**
  * Клиенту нужен не весь каталог, а срез для подсчёта совпадений.
  * Так в браузер уезжает несколько килобайт вместо всей базы.
  */
-export type NavigatorFleet = Pick<Yacht, "type" | "region" | "guests">;
+export type NavigatorFleet = FleetSlice;
 
 type NavigatorProps = {
   regions: Region[];
+  cities: City[];
   fleet: NavigatorFleet[];
 };
 
@@ -40,11 +48,13 @@ const FLEET_THUMBS = [
  * Тип лодки стоит первым осознанно: он сужает и список направлений,
  * и режим календаря, поэтому собрать невалидный запрос невозможно.
  */
-export function Navigator({ regions, fleet }: NavigatorProps) {
+export function Navigator({ regions, cities, fleet }: NavigatorProps) {
   const router = useRouter();
 
   const [type, setType] = useState<BoatTypeId>("cruise");
-  const [region, setRegion] = useState<string | null>(null);
+  /* Одно поле «куда» на все типы: что в нём лежит — регион или город,
+     решает placesForBoatType, а не компонент. */
+  const [place, setPlace] = useState<string | null>(null);
   const [guests, setGuests] = useState<number | null>(null);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -76,10 +86,9 @@ export function Navigator({ regions, fleet }: NavigatorProps) {
   }, [open]);
 
   const boatType = getBoatType(type);
-  const isDaily = boatType?.minDays === 1;
-  const availableRegions = useMemo(
-    () => regionsForBoatType(regions, fleet, type),
-    [regions, fleet, type],
+  const places = useMemo(
+    () => placesForBoatType(type, fleet, { regions, cities }),
+    [type, fleet, regions, cities],
   );
 
   /* Потолок берём из флота: у спортивных лодок это 6, просить 12 бессмысленно. */
@@ -93,22 +102,45 @@ export function Navigator({ regions, fleet }: NavigatorProps) {
     });
   }
 
+  /**
+   * Подсказка под счётчиком.
+   *
+   * У спортивной она объясняет главное правило класса: в лодку садятся
+   * четверо, компанию крупнее развозят на нескольких. У остальных —
+   * что экипаж не занимает гостевых мест.
+   */
+  const guestsNote = (() => {
+    if (boatType?.multiBoat) {
+      return `${capacityRule(seatsForType(fleet, type))}.`;
+    }
+    return guests !== null && guests >= maxGuests
+      ? `Больше ${maxGuests} гостей ни одна ${boatType?.name.toLowerCase()} не берёт.`
+      : `${boatType?.crewNoun} и матросы на борту не занимают гостевые места.`;
+  })();
+
   const matches = useMemo(
-    () => filterYachts(fleet, { type, region, guests }),
-    [fleet, type, region, guests],
+    () =>
+      filterYachts(fleet, {
+        type,
+        region: places.kind === "region" ? place : null,
+        city: places.kind === "city" ? place : null,
+        area: null,
+        guests,
+      }),
+    [fleet, type, places.kind, place, guests],
   );
 
-  /** Смена типа может обнулить направление, которого у него нет. */
+  /**
+   * Смена типа переписывает поле «куда» целиком: у спортивной там города,
+   * у остальных — регионы, и старое значение почти наверняка не подходит.
+   */
   function handleTypeChange(next: BoatTypeId) {
     setType(next);
-    if (
-      region &&
-      !regionsForBoatType(regions, fleet, next).some((r) => r.slug === region)
-    ) {
-      setRegion(null);
-    }
-    if (next === "sport") setDateTo("");
 
+    const nextPlaces = placesForBoatType(next, fleet, { regions, cities });
+    if (place && !nextPlaces.options.some((item) => item.slug === place)) {
+      setPlace(null);
+    }
     // На новый тип может не найтись лодки такой вместимости — подрезаем.
     const limit = maxGuestsForType(fleet, next);
     setGuests((current) => (current && current > limit ? limit : current));
@@ -123,17 +155,15 @@ export function Navigator({ regions, fleet }: NavigatorProps) {
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const params = new URLSearchParams({ type });
-    if (region) params.set("region", region);
+    if (place) params.set(places.kind, place);
     if (guests) params.set("guests", String(guests));
     if (dateFrom) params.set("from", dateFrom);
-    if (dateTo && !isDaily) params.set("to", dateTo);
+    if (dateTo) params.set("to", dateTo);
     router.push(`/search?${params.toString()}`);
   }
 
   const datesValue = dateFrom
-    ? isDaily
-      ? formatDate(dateFrom)
-      : `${formatDate(dateFrom)}${dateTo ? ` — ${formatDate(dateTo)}` : ""}`
+    ? `${formatDate(dateFrom)}${dateTo ? ` — ${formatDate(dateTo)}` : ""}`
     : null;
 
   return (
@@ -178,10 +208,7 @@ export function Navigator({ regions, fleet }: NavigatorProps) {
                       onClick={() => handleTypeChange(option.id)}
                     >
                       {option.name}
-                      {/* «на день» и так очевидно из подписи к календарю. */}
-                      {option.minDays > 1 && (
-                        <span className={styles.optionNote}>{option.term}</span>
-                      )}
+                      <span className={styles.optionNote}>{option.term}</span>
                     </button>
                   ))}
                 </div>
@@ -190,58 +217,62 @@ export function Navigator({ regions, fleet }: NavigatorProps) {
             )}
           </div>
 
-          {/* --- Направление --- */}
+          {/* --- Куда: регион или база, смотря по типу лодки --- */}
           <div className={styles.segment}>
             <button
               type="button"
               className={styles.trigger}
-              onClick={() => toggle("region")}
-              aria-expanded={open === "region"}
+              onClick={() => toggle("place")}
+              aria-expanded={open === "place"}
             >
               <PinIcon />
               <span className={styles.triggerBody}>
-                <span className={styles.triggerLabel}>Куда</span>
+                <span className={styles.triggerLabel}>{places.fieldLabel}</span>
                 <span
                   className={`${styles.triggerValue} ${
-                    region ? "" : styles["triggerValue--empty"]
+                    place ? "" : styles["triggerValue--empty"]
                   }`}
                 >
-                  {region
-                    ? regions.find((item) => item.slug === region)?.name
-                    : "Любое направление"}
+                  {place
+                    ? places.options.find((item) => item.slug === place)?.name
+                    : places.anyLabel}
                 </span>
               </span>
-              <Chevron open={open === "region"} />
+              <Chevron open={open === "place"} />
             </button>
 
-            {open === "region" && (
+            {open === "place" && (
               <div className={styles.popover}>
                 <p className={styles.popoverTitle}>
-                  Доступно для типа «{boatType?.name.toLowerCase()}» —{" "}
-                  {availableRegions.length} из {regions.length}
+                  {places.kind === "city"
+                    ? `Спортивная яхта стоит на базе — ${pluralPlaces(
+                        places.options.length,
+                        "city",
+                      )}`
+                    : `Доступно ${pluralPlaces(places.options.length, "region")}`}
                 </p>
                 <div className={styles.options}>
                   <button
                     type="button"
                     className={`${styles.option} ${
-                      region === null ? styles["option--active"] : ""
+                      place === null ? styles["option--active"] : ""
                     }`}
                     onClick={() => {
-                      setRegion(null);
+                      setPlace(null);
                       setOpen(null);
                     }}
                   >
-                    Любое
+                    {places.kind === "city" ? "Любая" : "Любое"}
                   </button>
-                  {availableRegions.map((option) => (
+                  {places.options.map((option) => (
                     <button
                       key={option.slug}
                       type="button"
                       className={`${styles.option} ${
-                        option.slug === region ? styles["option--active"] : ""
+                        option.slug === place ? styles["option--active"] : ""
                       }`}
                       onClick={() => {
-                        setRegion(option.slug);
+                        setPlace(option.slug);
                         setOpen(null);
                       }}
                     >
@@ -263,49 +294,32 @@ export function Navigator({ regions, fleet }: NavigatorProps) {
             >
               <CalendarIcon />
               <span className={styles.triggerBody}>
-                <span className={styles.triggerLabel}>
-                  {isDaily ? "Дата выхода" : "Даты"}
-                </span>
+                <span className={styles.triggerLabel}>Даты</span>
                 <span
                   className={`${styles.triggerValue} ${
                     datesValue ? "" : styles["triggerValue--empty"]
                   }`}
                 >
-                  {datesValue ?? (isDaily ? "Один день" : "От 4 дней")}
+                  {datesValue ?? `От ${pluralDays(boatType?.minDays ?? 4)}`}
                 </span>
               </span>
               <Chevron open={open === "dates"} />
             </button>
 
             {open === "dates" && (
-              <div className={styles.popover}>
-                <div className={styles.dateGrid}>
-                  <label className={styles.dateField}>
-                    {isDaily ? "Дата" : "Заезд"}
-                    <input
-                      type="date"
-                      className={styles.dateInput}
-                      value={dateFrom}
-                      onChange={(event) => setDateFrom(event.target.value)}
-                    />
-                  </label>
-
-                  {!isDaily && (
-                    <label className={styles.dateField}>
-                      Выезд
-                      <input
-                        type="date"
-                        className={styles.dateInput}
-                        value={dateTo}
-                        min={minReturnDate(dateFrom, boatType?.minDays ?? 4)}
-                        onChange={(event) => setDateTo(event.target.value)}
-                      />
-                    </label>
-                  )}
-                </div>
+              <div className={`${styles.popover} ${styles["popover--wide"]}`}>
+                <DateRangePicker
+                  from={dateFrom}
+                  to={dateTo}
+                  minDays={boatType?.minDays ?? 4}
+                  onChange={({ from, to }) => {
+                    setDateFrom(from);
+                    setDateTo(to);
+                  }}
+                />
                 <p className={styles.popoverNote}>
-                  {isDaily
-                    ? "Спортивную яхту берут на один день — с утреннего инструктажа до вечернего возвращения на базу."
+                  {boatType?.multiBoat
+                    ? "Спортивную берут от одного дня — с утреннего инструктажа до вечернего возвращения на базу. Верхней границы нет."
                     : "Круизные и моторные яхты бронируются по календарю от четырёх дней."}
                 </p>
               </div>
@@ -374,11 +388,7 @@ export function Navigator({ regions, fleet }: NavigatorProps) {
                   Не важно
                 </button>
 
-                <p className={styles.popoverNote}>
-                  {guests !== null && guests >= maxGuests
-                    ? `Больше ${maxGuests} гостей ни одна ${boatType?.name.toLowerCase()} не берёт.`
-                    : "Капитан и матросы на борту не занимают гостевые места."}
-                </p>
+                <p className={styles.popoverNote}>{guestsNote}</p>
               </div>
             )}
           </div>
@@ -390,7 +400,9 @@ export function Navigator({ regions, fleet }: NavigatorProps) {
 
         <p className={styles.footer}>
           <span>Нашли</span>
-          <span className={styles.count}>{formatMatches(matches.length)}</span>
+          <span className={styles.count}>
+            {pluralYachtsAccusative(matches.length)}
+          </span>
           <span>под ваш запрос</span>
         </p>
 
@@ -428,25 +440,6 @@ function formatDate(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
-}
-
-/** Самая ранняя дата выезда с учётом минимального срока аренды. */
-function minReturnDate(from: string, minDays: number): string | undefined {
-  if (!from) return undefined;
-  const date = new Date(from);
-  if (Number.isNaN(date.getTime())) return undefined;
-  date.setDate(date.getDate() + minDays);
-  return date.toISOString().slice(0, 10);
-}
-
-/** Винительный падеж: «нашли 1 яхту / 2 яхты / 5 яхт». */
-function formatMatches(count: number): string {
-  const mod10 = count % 10;
-  const mod100 = count % 100;
-  if (mod10 === 1 && mod100 !== 11) return `${count} яхту`;
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14))
-    return `${count} яхты`;
-  return `${count} яхт`;
 }
 
 /* --- Иконки --------------------------------------------------------------- */

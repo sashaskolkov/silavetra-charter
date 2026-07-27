@@ -8,7 +8,10 @@
       "WebFetch(domain:silavetra.com)",
       "WebFetch(domain:searadar.com)",
       "WebSearch",
-      "mcp__visualize__read_me"
+      "mcp__visualize__read_me",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "WebFetch(domain:crimeaphile.livejournal.com)"
     ]
   }
 }

@@ -26,6 +26,16 @@ export function Header() {
           </a>
 
           <a
+            href="https://telegram.me/silavetrasila"
+            target="_blank"
+            rel="noreferrer noopener"
+            className={`${styles.iconBtn} ${styles.telegram}`}
+            aria-label="Написать в Telegram"
+          >
+            <TelegramIcon />
+          </a>
+
+          <a
             href="mailto:allo@silavetra.com"
             className={`${styles.iconBtn} ${styles.mail}`}
             aria-label="Написать письмо"
@@ -99,6 +109,15 @@ function PhoneIcon() {
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+/** Тот же знак, что в подвале и в виджете чата — канал один и тот же. */
+function TelegramIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 26 26" fill="currentColor" aria-hidden="true">
+      <path d="M21.6 5.4 3.9 12.2c-.9.4-.9 1 0 1.3l4.4 1.4 1.7 5.2c.2.6.4.8 1 .3l2.5-2.2 4.4 3.3c.8.4 1.3.2 1.5-.7l2.8-13c.3-1.1-.4-1.6-1.1-1.4h-.5Zm-2.3 3-8.1 7.3-.3 3.4-1.6-5 10-5.7Z" />
     </svg>
   );
 }

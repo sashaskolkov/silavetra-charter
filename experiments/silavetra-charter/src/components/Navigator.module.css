@@ -145,6 +145,13 @@
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
 }
 
+/* Календарь шире списка вариантов, и обрезать его прокруткой нельзя. */
+.popover--wide {
+  min-width: 320px;
+  max-width: 360px;
+  max-height: none;
+}
+
 /* У последних полей панель прижимается к правому краю. */
 .popover--right {
   left: auto;
@@ -233,35 +240,6 @@
   font-weight: 500;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
-}
-
-/* Даты */
-
-.dateGrid {
-  display: grid;
-  gap: 12px;
-}
-
-.dateField {
-  display: grid;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--ink-muted);
-}
-
-.dateInput {
-  height: 44px;
-  padding-inline: 14px;
-  border: 1px solid var(--line-ink);
-  border-radius: var(--r-sm);
-  background: #fff;
-  color: var(--ink);
-  font-size: 15px;
-  color-scheme: light;
-}
-
-.dateInput:hover {
-  border-color: var(--ink);
 }
 
 .popoverNote {

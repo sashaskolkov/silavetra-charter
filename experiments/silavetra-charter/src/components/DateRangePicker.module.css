@@ -1,0 +1,191 @@
+/*
+ * Календарь выбора дат. Живёт в двух местах с разным фоном: светлый попап
+ * навигатора и тёмный сайдбар поиска. Цвета вынесены в переменные, тон
+ * переключается классом на корне.
+ */
+
+.root {
+  --cal-ink: var(--ink);
+  --cal-muted: var(--ink-muted);
+  --cal-faint: rgba(11, 27, 43, 0.35);
+  --cal-line: var(--line-ink);
+  --cal-hover: #eceef2;
+  --cal-range: rgba(228, 245, 140, 0.4);
+  --cal-prompt-bg: #eceef2;
+
+  display: grid;
+  gap: 12px;
+  color: var(--cal-ink);
+}
+
+.root--dark {
+  --cal-ink: var(--text);
+  --cal-muted: var(--text-muted);
+  --cal-faint: var(--text-faint);
+  --cal-line: var(--line);
+  --cal-hover: rgba(255, 255, 255, 0.1);
+  --cal-range: rgba(228, 245, 140, 0.18);
+  --cal-prompt-bg: rgba(255, 255, 255, 0.07);
+}
+
+/* --- Подпись: ради неё календарь и сделан своим ---------------------------- */
+
+.prompt {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 14px;
+  border-radius: var(--r-sm);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.promptDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-ink);
+}
+
+/* --- Шапка с месяцем ------------------------------------------------------- */
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.month {
+  font-size: 15px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.nav {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--cal-line);
+  border-radius: var(--r-pill);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.nav:hover:not(:disabled) {
+  background: var(--cal-hover);
+}
+
+.nav:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* --- Сетка ----------------------------------------------------------------- */
+
+.weekdays,
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.weekdays {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cal-faint);
+  text-align: center;
+}
+
+.day {
+  aspect-ratio: 1;
+  min-height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: var(--r-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.day:hover:not(:disabled) {
+  background: var(--cal-hover);
+}
+
+.day:disabled {
+  color: var(--cal-faint);
+  cursor: default;
+}
+
+/* Дни соседних месяцев видно, но они не спорят с текущим. */
+.day--outside:not(:disabled) {
+  color: var(--cal-muted);
+}
+
+/* Промежуток между заездом и выездом. */
+.day--between {
+  background: var(--cal-range);
+}
+
+/* Сами заезд и выезд. */
+.day--edge {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.day--edge:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.day[aria-current="date"]:not(.day--edge) {
+  box-shadow: inset 0 0 0 1px var(--cal-line);
+}
+
+/* --- Итог ------------------------------------------------------------------ */
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--cal-line);
+  font-size: 14px;
+}
+
+.summaryValue {
+  font-weight: 500;
+}
+
+.summaryValue--empty {
+  color: var(--cal-muted);
+}
+
+.summaryDash {
+  color: var(--cal-faint);
+}
+
+.reset {
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--cal-muted);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.reset:hover {
+  color: var(--cal-ink);
+}

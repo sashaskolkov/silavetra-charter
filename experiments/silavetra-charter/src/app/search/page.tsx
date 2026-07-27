@@ -18,7 +18,7 @@ export const metadata: Metadata = {
  * useSearchParams обязан быть внутри Suspense — иначе сборка падает.
  */
 export default function SearchPage() {
-  const { yachts, regions } = loadFleet();
+  const { yachts, regions, areas, cities } = loadFleet();
 
   return (
     <>
@@ -26,7 +26,12 @@ export default function SearchPage() {
 
       <main className={`container ${styles.page}`}>
         <Suspense fallback={<p className={styles.count}>Загружаем каталог…</p>}>
-          <SearchResults yachts={yachts} regions={regions} />
+          <SearchResults
+            yachts={yachts}
+            regions={regions}
+            areas={areas}
+            cities={cities}
+          />
         </Suspense>
       </main>
 

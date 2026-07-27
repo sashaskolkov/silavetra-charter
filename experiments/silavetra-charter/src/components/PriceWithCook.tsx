@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { COOK_PRICE_PER_DAY, formatPrice, pluralDays } from "@/data/catalog";
+import {
+  COOK_PRICE_PER_DAY,
+  boatsNote,
+  formatPrice,
+  pluralDays,
+} from "@/data/catalog";
 import styles from "./PriceWithCook.module.css";
 
 type Props = {
@@ -11,6 +16,13 @@ type Props = {
   assumed: boolean;
   /** Есть ли на лодке камбуз и место для повара. */
   cookAvailable: boolean;
+  /**
+   * Сколько лодок нужно компании. Больше одной бывает только у спортивных:
+   * в четырёхместный корпус компания не влезает, и берут вторую.
+   */
+  boats?: number;
+  /** Вместимость одной лодки — для подписи о числе лодок. */
+  capacity?: number;
   size?: "normal" | "large";
 };
 
@@ -25,6 +37,8 @@ export function PriceWithCook({
   days,
   assumed,
   cookAvailable,
+  boats = 1,
+  capacity = 0,
   size = "normal",
 }: Props) {
   const [withCook, setWithCook] = useState(false);
@@ -42,13 +56,21 @@ export function PriceWithCook({
           size === "large" ? styles["price--large"] : ""
         }`}
       >
-        {formatPrice(perDay * days)}
+        {formatPrice(perDay * days * boats)}
       </p>
 
       <p className={styles.term}>
         {pluralDays(days)} · {formatPrice(perDay)} в сутки
         {withCook ? " с поваром" : ""}
+        {/* «за лодку» уводим на свою строку: иначе оно липнет к сумме
+            и читается как часть цены, а это уточнение к ней. */}
+        {boats > 1 && <span className={styles.termLine}>за лодку</span>}
       </p>
+
+      {/* Одна строка, без подробностей: карточка и так плотная. */}
+      {boats > 1 && capacity > 0 && (
+        <p className={styles.boats}>{boatsNote(boats, capacity)}</p>
+      )}
 
       {cookAvailable && (
         <label
